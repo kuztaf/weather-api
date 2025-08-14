@@ -27,11 +27,16 @@ async def get_weather_data(city: str):
 
     # 2. Llamar API externa
     async with httpx.AsyncClient() as client:
-        response = await client.get(BASE_URL, params={
-            "q": city,
-            "appid": WEATHER_API_KEY,
-            "units": "metric"
-        })
+        print(f"*******Calling weather API for city: {city} {BASE_URL} {WEATHER_API_KEY}")
+        headers = {
+            "key": WEATHER_API_KEY,
+        }
+        response = await client.get(
+            BASE_URL,
+            params={"q": city,
+                    "lang": "es"},
+            headers=headers
+        )
         data = response.json()
 
     # 3. Guardar en cache por 1 hora

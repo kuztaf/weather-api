@@ -15,6 +15,7 @@ import asyncio
 
 class WeatherView(APIView):
     def get(self, request: Request, city=None, lat=None, long=None):
+        print(f"Received request with city: {city}, lat: {lat}, long: {long}")
         if city:
             data = asyncio.run(get_weather_data(city))
             return Response(data)
