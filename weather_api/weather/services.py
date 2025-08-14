@@ -15,7 +15,7 @@ redis_client = redis.Redis(
 )
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
-BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+BASE_URL = os.getenv("WEATHER_API_URL")
 
 async def get_weather_data(city: str):
     cache_key = f"weather:{city.lower()}"
@@ -34,7 +34,7 @@ async def get_weather_data(city: str):
         })
         data = response.json()
 
-    # 3. Guardar en cache por 10 min
-    redis_client.setex(cache_key, 600, str(data))
+    # 3. Guardar en cache por 1 hora
+    redis_client.setex(cache_key, 3600, str(data))
 
     return {"source": "api", "data": data}

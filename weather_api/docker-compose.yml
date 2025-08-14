@@ -17,3 +17,11 @@ services:
     container_name: redis_weather
     ports:
       - "6379:6379"
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: redisinsight_weather
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
