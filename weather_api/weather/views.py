@@ -14,8 +14,27 @@ import asyncio
 
 
 class WeatherView(APIView):
+    """
+    APIView for retrieving weather data based on city name or geographic coordinates.
+
+    Methods:
+        get(request: Request, city=None, lat=None, long=None):
+            Handles GET requests to fetch weather data.
+            - If 'city' is provided, retrieves weather data for the specified city.
+            - If 'lat' and 'long' are provided, retrieves weather data for the specified coordinates.
+            - If 'lat' and 'long' are present in query parameters, retrieves weather data for those coordinates.
+            - Returns a 400 BAD REQUEST if neither city nor coordinates are provided.
+
+    Args:
+        request (Request): The HTTP request object.
+        city (str, optional): Name of the city to fetch weather data for.
+        lat (str or float, optional): Latitude for coordinate-based weather data.
+        long (str or float, optional): Longitude for coordinate-based weather data.
+
+    Returns:
+        Response: Weather data in JSON format or an error message with appropriate HTTP status code.
+    """
     def get(self, request: Request, city=None, lat=None, long=None):
-        print(f"Received request with city: {city}, lat: {lat}, long: {long}")
         if city:
             data = asyncio.run(get_weather_data(city))
             return Response(data)

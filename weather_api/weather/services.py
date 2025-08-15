@@ -6,7 +6,7 @@ from django.conf import settings
 
 load_dotenv()
 
-# Configuración de Redis
+# Initialize Redis client
 redis_client = redis.Redis(
     host=settings.REDIS_HOST,
     port=settings.REDIS_PORT,
@@ -14,20 +14,38 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
+# Load environment variables
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 BASE_URL = os.getenv("WEATHER_API_URL")
 
+"""
+Asynchronously retrieves weather data for a given city.
+
+This function first checks if the weather data for the specified city is available in the Redis cache.
+If cached data is found, it returns the cached data. Otherwise, it fetches the weather data from an
+external API, stores the result in the cache for 1 hour, and then returns the data.
+
+Args:
+    city (str): The name of the city for which to retrieve weather data.
+
+Returns:
+    dict: A dictionary containing the data source ("cache" or "api") and the weather data.
+
+Raises:
+    httpx.HTTPError: If the external API request fails.
+"""
 async def get_weather_data(city: str):
+
     cache_key = f"weather:{city.lower()}"
 
-    # 1. Revisar cache
+    # 1. Check cache
     cached = redis_client.get(cache_key)
+
     if cached:
         return {"source": "cache", "data": eval(cached)}
 
-    # 2. Llamar API externa
+    # 2. Call external API
     async with httpx.AsyncClient() as client:
-        print(f"*******Calling weather API for city: {city} {BASE_URL} {WEATHER_API_KEY}")
         headers = {
             "key": WEATHER_API_KEY,
         }
@@ -39,7 +57,7 @@ async def get_weather_data(city: str):
         )
         data = response.json()
 
-    # 3. Guardar en cache por 1 hora
+    # 3. Save the API response in cache for 1 hour
     redis_client.setex(cache_key, 3600, str(data))
 
     return {"source": "api", "data": data}
