@@ -19,14 +19,16 @@ WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 BASE_URL = os.getenv("WEATHER_API_URL")
 
 """
-Asynchronously retrieves weather data for a given city.
+Asynchronously retrieves weather data for a given city or coordinates.
 
 This function first checks if the weather data for the specified city is available in the Redis cache.
 If cached data is found, it returns the cached data. Otherwise, it fetches the weather data from an
 external API, stores the result in the cache for 1 hour, and then returns the data.
 
 Args:
-    city (str): The name of the city for which to retrieve weather data.
+    city (str, optional): The name of the city for which to retrieve weather data.
+    lat (str, optional): Latitude coordinate.
+    long (str, optional): Longitude coordinate.
 
 Returns:
     dict: A dictionary containing the data source ("cache" or "api") and the weather data.
@@ -34,9 +36,16 @@ Returns:
 Raises:
     httpx.HTTPError: If the external API request fails.
 """
-async def get_weather_data(city: str):
+async def get_weather_data(city: str = None, lat: str = None, long: str = None):
 
-    cache_key = f"weather:{city.lower()}"
+    if city:
+        cache_key = f"weather:{city.lower()}"
+        query_param = city
+    elif lat and long:
+        cache_key = f"weather:{lat},{long}"
+        query_param = f"{lat},{long}"
+    else:
+        raise ValueError("Either city or coordinates (lat, long) must be provided")
 
     # 1. Check cache
     cached = redis_client.get(cache_key)
@@ -51,7 +60,7 @@ async def get_weather_data(city: str):
         }
         response = await client.get(
             BASE_URL,
-            params={"q": city,
+            params={"q": query_param,
                     "lang": "es"},
             headers=headers
         )
